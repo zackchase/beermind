@@ -1,0 +1,57 @@
+\documentclass[]{article}
+
+
+%\usepackage{hyperref}
+\usepackage{url}
+\usepackage{graphicx} % more modern
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{bbm}
+\usepackage{titlesec}
+\usepackage{caption}
+\usepackage{subcaption}
+%\usepackage[noadjust]{cite}
+\usepackage{natbib}
+\bibliographystyle{unsrtnat}
+
+
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\argmin}{argmin}
+\DeclareMathOperator{\softmax}{softmax}
+
+
+
+\begin{document}
+
+\title{Playing the Imitation Game:  A Recurrent Neural \\
+ Network Chatbot with N-Sequence Memory}
+
+\author{Zachary C. Lipton, Sharad Vikram\\
+University of California, San Diego\\
+\texttt{\{zlipton, svikram\}@cs.ucsd.edu, svikram@cs.ucsd.edu}
+}
+
+\begin{abstract}
+
+\end{abstract}
+
+\section{Ideas}
+
+\begin{itemize}
+
+\item Previous work with RNNS to process text either worked at the character level (Sutskever, Karpathy) or word-level (using word2vec type embeddings) but was restricted to sentences. We desire to produce longer responses corresponding to one party's part in a two-party dialogue, but simultaneously to exploit the structure of word2vec representations.
+
+Thus we model our text as a series of exchanges, where each exchange is a sequence of words (or tokens). In order to make our model maximally general we represent punctuation marks as tokens in the same class as words. Thus the sequence "hello, my name is Charlie Parker. I play bebop" whould be represented (<hello> <,> <my> <name> <is> <Charlie> <Parker> <.> <I> <play> <bebop>.
+
+\item \textbf{Capitaization:} To capture captialization, we automatically capitalize words that come after periods in post-processing.
+
+Note: This can get more complicated. Are we going to add words to the covab twice, once capitalized once not? What about words with distinct meanings, e.g., that are names but also verbs. One example is "Bob" and "bob".
+
+\end{itemize}
+
+\bibliography{deepx.bib}
+
+\end{document}
