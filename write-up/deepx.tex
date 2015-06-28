@@ -35,11 +35,20 @@ University of California, San Diego\\
 }
 
 \begin{abstract}
-
+We describe a Recurrent Neural Network (RNN) for modeling long conversations, spanning many exchanges. Our system captures long term time dependencies and allows information to travel across many time steps.
 \end{abstract}
+
+
+\section{Problem with Encoder Decoder Models}
+The LSTM model is very powerful because it is able to store ``memory" which is trappen in memory cells, cycling along ``constant error carousels". When we pass from encoder to decoder, we get only what is output by the encoder at the very last step, we lose all the information trapped in the carousels. The same goes when we pass from decoder to encoder. Maybe we need a more direct way of preserving model across the multiple exchanges?
+
 
 \section{Dialogue Model}
 
+
+
+
+\section{Introduction}
 \section{Ideas}
 
 \begin{itemize}
@@ -67,6 +76,10 @@ Thus we model our text as a series of exchanges, where each exchange is a sequen
 Note: This can get more complicated. Are we going to add words to the covab twice, once capitalized once not? What about words with distinct meanings, e.g., that are names but also verbs. One example is "Bob" and "bob".
 
 \end{itemize}
+
+
+\section{Conclusion}
+\section{Acknowledgements}
 
 \bibliography{deepx.bib}
 
