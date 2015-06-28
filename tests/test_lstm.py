@@ -31,18 +31,18 @@ class TestSimpleLSTM(unittest.TestCase):
 
         input_gate = logistic(X)
         state = np.tanh(1) * input_gate
-        output_gate = logistic(state + 1)
+        output_gate = logistic(1)
         out = output_gate * np.tanh(state)
         lstm_out, lstm_state = self.lstm.step(X, S, H)
 
         self.assertEqual(lstm_out, out)
 
-        Wi = self.lstm.get_parameter_value('Wi')
-        self.lstm.set_parameter_value('Wi', Wi * 0)
+        Wi = self.lstm.get_parameter_value('W_ix')
+        self.lstm.set_parameter_value('W_ix', Wi * 0)
 
         input_gate = 0.5
         state = np.tanh(1) * input_gate
-        output_gate = logistic(state + 1)
+        output_gate = logistic(1)
         out = output_gate * np.tanh(state)
         lstm_out, lstm_state = self.lstm.step(X, S, H)
         self.assertEqual(lstm_out, out)
@@ -56,19 +56,19 @@ class TestSimpleLSTM(unittest.TestCase):
 
         input_gate = logistic(X)
         state = np.tanh(1) * input_gate
-        output_gate = logistic(state + 1)
+        output_gate = logistic(1)
         out = output_gate * np.tanh(state)
         lstm_out, lstm_state = self.lstm.step(X, S, H)
 
         self.assertEqual(lstm_out, out)
         self.assertEqual(lstm_state, state)
 
-        Wo = self.lstm.get_parameter_value('Wo')
-        self.lstm.set_parameter_value('Wo', Wo * 0)
+        Wo = self.lstm.get_parameter_value('W_ox')
+        self.lstm.set_parameter_value('W_ox', Wo * 0)
 
         input_gate = logistic(X)
         state = np.tanh(1) * input_gate
-        output_gate = logistic(state)
+        output_gate = logistic(0)
         out = output_gate * np.tanh(state)
         lstm_out, lstm_state = self.lstm.step(X, S, H)
         self.assertEqual(lstm_out, out)
@@ -83,19 +83,19 @@ class TestSimpleLSTM(unittest.TestCase):
         input_gate = logistic(X)
         forget_gate = logistic(X)
         state = np.tanh(1) * input_gate + forget_gate
-        output_gate = logistic(state + 1)
+        output_gate = logistic(1)
         out = output_gate * np.tanh(state)
         lstm_out, lstm_state = self.lstm_forget.step(X, H, S)
 
         self.assertEqual(lstm_out, out)
 
-        Wf = self.lstm_forget.get_parameter_value('Wf')
-        self.lstm_forget.set_parameter_value('Wf', Wf * 0)
+        Wf = self.lstm_forget.get_parameter_value('W_fx')
+        self.lstm_forget.set_parameter_value('W_fx', Wf * 0)
 
         input_gate = logistic(X)
         forget_gate = 0.5
         state = np.tanh(1) * input_gate + forget_gate
-        output_gate = logistic(state + 1)
+        output_gate = logistic(1)
         out = output_gate * np.tanh(state)
         lstm_out, lstm_state = self.lstm_forget.step(X, H, S)
 
