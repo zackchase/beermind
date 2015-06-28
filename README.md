@@ -8,7 +8,7 @@ Please make sure you have the appropriate dependencies to install those.
 To set up the `virtualenv`, run the following commands:
 ```bash
 $ virtualenv --no-site-packages venv
-$ source venv/activate
+$ source venv/bin/activate
 $ pip install setuptools pip --upgrade # need newest setuptools/pip
 $ pip install -r requirements.txt
 ```
