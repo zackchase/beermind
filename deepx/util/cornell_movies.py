@@ -1,6 +1,8 @@
+import numpy as np
 from tqdm import tqdm
-from nltk import sent_tokenize, word_tokenize
+
 from word2vec import train, load_model
+from tokenize import tokenize_sentence, tokenize_word
 
 class CornellMoviesDataset(object):
 
@@ -32,9 +34,9 @@ class CornellMoviesDataset(object):
         for conversation in tqdm(self.conversations):
             for line in conversation.lines:
                 text = line.raw_text.lower()
-                sentences.extend([word_tokenize(s) for s in sent_tokenize(text)])
-        model = train(self.data_dir, sentences, model_name)
-        return model
+                sentences.extend([tokenize_word(s) for s in tokenize_sentence(text)])
+        w2v = train(self.data_dir, sentences, model_name, min_count=1)
+        return w2v
 
 class Movie(object):
 
@@ -62,7 +64,6 @@ class Line(object):
         self.movie = movie
         self.character = character
         self.raw_text = text.decode('utf-8', 'ignore')
-        #self.text = word_tokenize(self.raw_text)
 
     @staticmethod
     def from_line(line, movies):
@@ -71,12 +72,20 @@ class Line(object):
         line = Line(line[0], movies[line[2]], line[3], line[4])
         return line
 
+    def as_matrix(self, w2v):
+        tokens = tokenize_word(self.raw_text.lower())
+        mat = np.zeros((len(tokens), w2v.layer1_size))
+        for i, token in enumerate(tokens):
+            mat[i] = w2v[token]
+        return mat
+
 class Conversation(object):
 
     def __init__(self, lines, movie):
         self.lines = lines
         self.movie = movie
         self.length = len(self.lines)
+        self.characters = set([l.character for l in self.lines])
 
     @staticmethod
     def from_line(line, lines):
