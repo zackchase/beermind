@@ -18,7 +18,7 @@ class LSTM(Theanifiable):
                  num_layers=2,
                  use_forget_gate=True,
                  use_input_peep=False, use_output_peep=False, use_forget_peep=False,
-                 use_tanh_output=True):
+                 use_tanh_output=True, seed=None):
         super(LSTM, self).__init__()
         self.name = name
         self.n_input = n_input
@@ -30,33 +30,34 @@ class LSTM(Theanifiable):
         self.use_forget_peep = use_forget_peep
         self.use_tanh_output = use_tanh_output
 
+        np.random.seed(seed)
+
         assert self.num_layers >= 1
 
         self.parameters = {}
 
         self.init_parameter('W_ix', self.initialize_weights((self.n_input, self.n_hidden)))
-        if self.use_input_peep:
-            self.init_parameter('P_i', self.initialize_weights((self.num_layers, self.n_hidden, self.n_hidden)))
         self.init_parameter('U_ih', self.initialize_weights((self.num_layers, self.n_hidden, self.n_hidden)))
         self.init_parameter('b_i', self.initialize_weights((self.num_layers, self.n_hidden)))
 
         self.init_parameter('W_ox', self.initialize_weights((self.n_input, self.n_hidden)))
-        if self.use_output_peep:
-            self.init_parameter('P_o', self.initialize_weights((self.num_layers, self.n_hidden, self.n_hidden)))
         self.init_parameter('U_oh', self.initialize_weights((self.num_layers, self.n_hidden, self.n_hidden)))
         self.init_parameter('b_o', self.initialize_weights((self.num_layers, self.n_hidden)))
 
-
         self.init_parameter('W_fx', self.initialize_weights((self.n_input, self.n_hidden)))
-        if self.use_forget_peep:
-            self.init_parameter('P_f', self.initialize_weights((self.num_layers, self.n_hidden, self.n_hidden)))
         self.init_parameter('U_fh', self.initialize_weights((self.num_layers, self.n_hidden, self.n_hidden)))
         self.init_parameter('b_f', self.initialize_weights((self.num_layers, self.n_hidden)))
-
 
         self.init_parameter('W_gx', self.initialize_weights((self.n_input, self.n_hidden)))
         self.init_parameter('U_gh', self.initialize_weights((self.num_layers, self.n_hidden, self.n_hidden)))
         self.init_parameter('b_g', self.initialize_weights((self.num_layers, self.n_hidden)))
+
+        if self.use_input_peep:
+            self.init_parameter('P_i', self.initialize_weights((self.num_layers, self.n_hidden, self.n_hidden)))
+        if self.use_output_peep:
+            self.init_parameter('P_o', self.initialize_weights((self.num_layers, self.n_hidden, self.n_hidden)))
+        if self.use_forget_peep:
+            self.init_parameter('P_f', self.initialize_weights((self.num_layers, self.n_hidden, self.n_hidden)))
 
         if self.num_layers > 1:
             self.init_parameter('W_il', self.initialize_weights((self.num_layers - 1, self.n_hidden, self.n_hidden)))
@@ -184,7 +185,7 @@ if __name__ == "__main__":
     O = 30
     B = 15
     D = 10
-    lstm = LSTM('encoder', D, O, num_layers=layers).compile()
+    lstm = LSTM('encoder', D, O, num_layers=layers, seed=1).compile()
     X = np.ones((B, D))
     H = np.zeros((B, layers, O))
     S = np.zeros((B, layers, O))
