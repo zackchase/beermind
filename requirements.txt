@@ -1,4 +1,12 @@
+boto==2.38.0
+bz2file==0.98
+gensim==0.11.1.post1
+nltk==3.0.3
 numpy==1.9.2
+path.py==7.3
 scipy==0.15.1
+six==1.9.0
+smart-open==1.2.1
 theanify==0.0.4
 Theano==0.7.0
+tqdm==1.0
