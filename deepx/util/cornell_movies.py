@@ -1,3 +1,7 @@
+from tqdm import tqdm
+from nltk import sent_tokenize, word_tokenize
+from word2vec import train, load_model
+
 class CornellMoviesDataset(object):
 
     def __init__(self, data_dir):
@@ -20,6 +24,17 @@ class CornellMoviesDataset(object):
             for line in fp:
                 conversation = Conversation.from_line(line, self.lines)
                 self.conversations.append(conversation)
+
+    def train_word2vec(self, model_name, force=False):
+        sentences = []
+        if (self.data_dir / model_name).exists() and not force:
+            return load_model(self.data_dir / model_name)
+        for conversation in tqdm(self.conversations):
+            for line in conversation.lines:
+                text = line.raw_text.lower()
+                sentences.extend([word_tokenize(s) for s in sent_tokenize(text)])
+        model = train(self.data_dir, sentences, model_name)
+        return model
 
 class Movie(object):
 
@@ -46,7 +61,8 @@ class Line(object):
         self.id = id
         self.movie = movie
         self.character = character
-        self.text = text
+        self.raw_text = text.decode('utf-8', 'ignore')
+        #self.text = word_tokenize(self.raw_text)
 
     @staticmethod
     def from_line(line, movies):
@@ -71,5 +87,5 @@ class Conversation(object):
 
     def __str__(self):
         return "\n".join(
-            ["%s: %s" % (l.character, l.text) for l in self.lines]
+            ["%s: %s" % (l.character, l.raw_text) for l in self.lines]
         )
