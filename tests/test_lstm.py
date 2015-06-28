@@ -11,6 +11,10 @@ class TestSimpleLSTM(unittest.TestCase):
     def setUp(self):
         self.lstm = LSTM('lstm', 1, 1, num_layers=1, use_forget_gate=False).compile()
         self.lstm_forget = LSTM('forget', 1, 1, num_layers=1, use_forget_gate=True).compile()
+        self.lstm_random = LSTM('random', 10, 10, num_layers=10, use_forget_gate=True,
+                                use_input_peep=True,
+                                use_forget_peep=True,
+                                use_output_peep=True).compile()
 
     def zero_lstm(self, lstm):
         for param in lstm.parameters:
@@ -100,6 +104,13 @@ class TestSimpleLSTM(unittest.TestCase):
         lstm_out, lstm_state = self.lstm_forget.step(X, H, S)
 
         self.assertEqual(lstm_out, out)
+
+    def test_save_load(self):
+        lstm = LSTM.load(self.lstm_random.state())
+        for param in lstm.parameters:
+            print param
+            self.assertTrue((lstm.get_parameter_value(param) == self.lstm_random.get_parameter_value(param)).all())
+
 
 
 
