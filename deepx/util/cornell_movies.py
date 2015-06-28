@@ -63,7 +63,7 @@ class Line(object):
         self.id = id
         self.movie = movie
         self.character = character
-        self.raw_text = text.decode('utf-8', 'ignore')
+        self.raw_text = text.decode('utf-8', 'ignore') + "EOR"
 
     @staticmethod
     def from_line(line, movies):
