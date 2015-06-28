@@ -27,15 +27,16 @@ class CornellMoviesDataset(object):
                 conversation = Conversation.from_line(line, self.lines)
                 self.conversations.append(conversation)
 
-    def train_word2vec(self, model_name, force=False):
+    def train_word2vec(self, model_name, word_size=100, force=False):
         sentences = []
         if (self.data_dir / model_name).exists() and not force:
             return load_model(self.data_dir / model_name)
         for conversation in tqdm(self.conversations):
             for line in conversation.lines:
-                text = line.raw_text.lower()
+                text = line.raw_text.lower() + " eor"
                 sentences.extend([tokenize_word(s) for s in tokenize_sentence(text)])
-        w2v = train(self.data_dir, sentences, model_name, min_count=1)
+        w2v = train(self.data_dir, sentences, model_name, min_count=1, size=word_size)
+        assert 'eor' in w2v.vocab, "No EOR token added to vocabulary"
         return w2v
 
 class Movie(object):
@@ -63,7 +64,7 @@ class Line(object):
         self.id = id
         self.movie = movie
         self.character = character
-        self.raw_text = text.decode('utf-8', 'ignore') + "EOR"
+        self.raw_text = text.decode('utf-8', 'ignore')
 
     @staticmethod
     def from_line(line, movies):
@@ -98,3 +99,6 @@ class Conversation(object):
         return "\n".join(
             ["%s: %s" % (l.character, l.raw_text) for l in self.lines]
         )
+
+    def as_sequence(self, w2v):
+        return [l.as_matrix(w2v) for l in self.lines]
