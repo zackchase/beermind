@@ -15,7 +15,7 @@ class LSTM(Theanifiable):
         self.use_forget_gate = use_forget_gate
         self.use_input_peep = use_input_peep
         self.use_output_peep = use_output_peep
-        self.use_forget_gate = use_forget_peep
+        self.use_forget_peep = use_forget_peep
 
         assert self.num_layers >= 1
 
