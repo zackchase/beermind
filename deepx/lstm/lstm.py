@@ -6,42 +6,59 @@ from theanify import theanify, Theanifiable
 
 class LSTM(Theanifiable):
 
-    def __init__(self, name, n_input, n_hidden, num_layers=2, use_forget_gate=True):
+    def __init__(self, name, n_input, n_hidden, num_layers=2, use_forget_gate=True, use_input_peep=False, use_output_peep=False, use_forget_peep=False):
         super(LSTM, self).__init__()
         self.name = name
         self.n_input = n_input
         self.n_hidden = n_hidden
         self.num_layers = num_layers
         self.use_forget_gate = use_forget_gate
+        self.use_input_peep = use_input_peep
+        self.use_output_peep = use_output_peep
+        self.use_forget_gate = use_forget_peep
 
         assert self.num_layers >= 1
 
         self.parameters = {}
 
-        self.init_parameter('Wi', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
-        self.init_parameter('Ui', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
-        self.init_parameter('bi', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
+        ####################################################################
+        #
+        #   W_ix    The weight matrix between input and igate
+        #   U_ih    Tensor containing recurrent weights between each layer and corresponding layer in next time step
+        #   b_i     Bias term for the input gate
+        #   W_il    Weight from previous layer l to igate
+        #
+        #   etc. for fgate and ogate
+        #
+        #
+        #
+        ####################################################################
+        self.init_parameter('W_ix', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('P_i', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('U_ih', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('b_i', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('W_il', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
 
-        self.init_parameter('Whi', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
 
-        self.init_parameter('Wf', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
-        self.init_parameter('Uf', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
-        self.init_parameter('bf', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('W_ox', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('P_o', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('U_oh', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('b_o', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('W_ol', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
 
-        self.init_parameter('Whf', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
 
-        self.init_parameter('Wc', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
-        self.init_parameter('Uc', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
-        self.init_parameter('bc', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('W_fx', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('P_f', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('U_fh', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('b_f', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('W_fh', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
 
-        self.init_parameter('Whc', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
 
-        self.init_parameter('Wo', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
-        self.init_parameter('Vo', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
-        self.init_parameter('Uo', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
-        self.init_parameter('bo', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('W_gx', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('U_gh', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('b_g', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('W_gc', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
 
-        self.init_parameter('Who', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
 
     def init_parameter(self, name, value):
         assert name not in self.parameters, "Cannot re-initialize theano shared variable, use set_parameter_value"
@@ -56,19 +73,36 @@ class LSTM(Theanifiable):
     def get_parameter_value(self, name):
         return self.parameters[name].get_value()
 
-    def forward_with_weights(self, X, previous_hidden, previous_state, Wi, Ui, bi, Wf, Uf, bf, Wc, Uc, bc, Wo, Vo, Uo, bo):
-        input_gate      = T.nnet.sigmoid(T.dot(X, Wi) + T.dot(previous_hidden, Ui) + bi)
-        candidate_state = T.tanh(T.dot(X, Wc) + T.dot(previous_hidden, Uc) + bc)
+    def forward_with_weights(self, X, previous_hidden, previous_state, Wi, Pi, Ui, bi, Wf, Pf, Uf, bf, Wg, Pg, Ug, bg, Wo, Po, Uo, bo):
+
+        if self.use_input_peep:
+            input_gate =  T.nnet.sigmoid(T.dot(X, Wi) + T.dot(previous_hidden, Ui) + T.dot(state, Pi) + bi)
+        else:
+            input_gate =  T.nnet.sigmoid(T.dot(X, Wi) + T.dot(previous_hidden, Ui) + bi)
+
+
+        candidate_state = T.tanh(T.dot(X, Wg) + T.dot(previous_hidden, Ug) + bc)
 
         if self.use_forget_gate:
-            forget_gate     = T.nnet.sigmoid(T.dot(X, Wf) + T.dot(previous_hidden, Uf) + bf)
+
+            if self.use_forget_peep:
+                forget_gate =  T.nnet.sigmoid(T.dot(X, Wf) + T.dot(previous_hidden, Uf) + T.dot(state, Pf) + bf)
+            else:
+                forget_gate =  T.nnet.sigmoid(T.dot(X, Wf) + T.dot(previous_hidden, Uf) + bf)
+
             state           = candidate_state * input_gate + previous_state * forget_gate
+
         else:
             state           = candidate_state * input_gate + previous_state * 0
 
-        output_gate     = T.nnet.sigmoid(T.dot(X, Wo) + T.dot(previous_hidden, Uo) \
-                                        + T.dot(state, Vo) + bo)
+        if self.use_output_peep:
+            forget_gate =  T.nnet.sigmoid(T.dot(X, Wo) + T.dot(previous_hidden, Uo) + T.dot(state, Po) + bo)
+
+        else:
+            forget_gate =  T.nnet.sigmoid(T.dot(X, Wo) + T.dot(previous_hidden, Uo) + bo)
+
         output          = output_gate * T.tanh(state)
+
         return output, state
 
     @theanify(T.matrix('X'), T.tensor3('previous_hidden'), T.tensor3('previous_state'))
