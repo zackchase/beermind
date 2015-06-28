@@ -108,14 +108,23 @@ class LSTM(Theanifiable):
         state_params = {}
         for param, value in self.parameters.items():
             state_params[param] = value.get_value()
-        return [self.n_input, self.n_hidden, self.num_layers, self.use_forget_gate, state_params]
+        return {
+            'name': self.name,
+            'n_input': self.n_input,
+            'n_hidden': self.n_hidden,
+            'num_layers': self.num_layers,
+            'use_forget_gate': self.use_forget_gate,
+            'parameters': state_params
+        }
 
     @staticmethod
     def load(state):
-        assert len(state) ==  5, state
-        lstm = LSTM(state[0], state[1], num_layers=state[2], use_forget_gate=state[3])
-        for param, value in state[4].items():
-            lstm.set_parameter(param, value)
+        assert len(state) ==  6, state
+        lstm = LSTM(state['name'], state['n_input'], state['n_hidden'],
+                    num_layers=state['num_layers'],
+                    use_forget_gate=state['use_forget_gate'])
+        for param, value in state['parameters'].items():
+            lstm.set_parameter_value(param, value)
         return lstm
 
 if __name__ == "__main__":
