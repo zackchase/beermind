@@ -28,9 +28,7 @@ class LSTM(Theanifiable):
         #   b_i     Bias term for the input gate
         #   W_il    Weight from previous layer l to igate
         #
-        #   etc. for fgate and ogate
-        #
-        #
+        #   etc. for g, fgate and ogate
         #
         ####################################################################
         self.init_parameter('W_ix', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
@@ -51,13 +49,13 @@ class LSTM(Theanifiable):
         self.init_parameter('P_f', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
         self.init_parameter('U_fh', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
         self.init_parameter('b_f', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
-        self.init_parameter('W_fh', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('W_fl', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
 
 
         self.init_parameter('W_gx', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
         self.init_parameter('U_gh', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
         self.init_parameter('b_g', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
-        self.init_parameter('W_gc', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('W_gl', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
 
 
     def init_parameter(self, name, value):
