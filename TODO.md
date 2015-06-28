@@ -14,7 +14,6 @@
 7. Write beamsearch function to sample approximately the sequence with highest joint probability (controlling for length >= some constant).
 
 8. **The real contribution** Connect end to end so that we can take k exchanges and maximize the probability of all decoded answers given the entire conversation. 
-
-8a. Given a sequence E1 D1 E2 D2, The state of D1 after decoding should be such that it improves the usefulness of E2 such that D2 can give a probable decoding. 
+Given a sequence E1 D1 E2 D2, The state of D1 after decoding should be such that it improves the usefulness of E2 such that D2 can give a probable decoding. 
 
 
