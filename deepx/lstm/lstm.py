@@ -18,32 +18,33 @@ class LSTM(Theanifiable):
 
         self.parameters = {}
 
-        self.set_parameter('Wi', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
-        self.set_parameter('Ui', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
-        self.set_parameter('bi', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('Wi', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('Ui', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('bi', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
 
-        self.set_parameter('Whi', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('Whi', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
 
-        self.set_parameter('Wf', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
-        self.set_parameter('Uf', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
-        self.set_parameter('bf', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('Wf', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('Uf', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('bf', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
 
-        self.set_parameter('Whf', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('Whf', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
 
-        self.set_parameter('Wc', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
-        self.set_parameter('Uc', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
-        self.set_parameter('bc', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('Wc', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('Uc', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('bc', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
 
-        self.set_parameter('Whc', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('Whc', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
 
-        self.set_parameter('Wo', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
-        self.set_parameter('Vo', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
-        self.set_parameter('Uo', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
-        self.set_parameter('bo', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('Wo', (np.random.rand(self.n_input, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('Vo', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('Uo', (np.random.rand(self.num_layers, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('bo', (np.random.rand(self.num_layers, self.n_hidden) - 0.5) / 1000.0)
 
-        self.set_parameter('Who', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
+        self.init_parameter('Who', (np.random.rand(self.num_layers - 1, self.n_hidden, self.n_hidden) - 0.5) / 1000.0)
 
-    def set_parameter(self, name, value):
+    def init_parameter(self, name, value):
+        assert name not in self.parameters, "Cannot re-initialize theano shared variable, use set_parameter_value"
         self.parameters[name] = theano.shared(value, name='%s-%s' % (self.name, name))
 
     def get_parameter(self, name):
@@ -89,7 +90,7 @@ class LSTM(Theanifiable):
             outs.append(out)
         return T.swapaxes(T.stack(*outs), 0, 1), T.swapaxes(T.stack(*states), 0, 1)
 
-    def get_parameters(self):
+    def get_theano_parameters(self):
         params = self.parameters.copy()
         if self.num_layers <= 1:
             del params['Whi']
