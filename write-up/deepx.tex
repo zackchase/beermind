@@ -38,13 +38,29 @@ University of California, San Diego\\
 
 \end{abstract}
 
+\section{Dialogue Model}
+
 \section{Ideas}
 
 \begin{itemize}
 
+
+\item \textbf{ Sequence to Sequence to Sequence to ...} The fundamental idea of this work is two fold. One is that the sequence to sequence model is inherently flexible and need not apply to translation tasks. This insight was independently reached by the sequence-to-sequence authors themselves who applied the net to the question-to-answer setting. This bot is extremely impressive in it's ability to reply with relevant utterances to form a single exchange but needs to be reminded with each prompt what the context of the conversation is in order to have a passable interaction.
+
+The truly novel idea here is that in contrast, our system connects multiple exchanges.
+Consider the following conversation between two agents, A & B:
+L1  A:  “What’s your favorite vegetable?”
+L2  B:  “I like cabbage, you?”
+L3  A:  “I forget, what were we talking about?”
+L4  B:  “You were asking what my favorite vegetable is.”
+
+In our model of two party dialogue, a computer system could never learn to take the part of agent B. In order to answer the question from A in L3, it would need to remember what it had previously said in L1.
+
+As LSTMs are specifically designed to learn long range time dependencies, we believe that we can train a system to have dialogues which span multiple exchanges in which the computer system retains information going all the way back to the very beginning of the conversation.
+
 \item Previous work with RNNS to process text either worked at the character level (Sutskever, Karpathy) or word-level (using word2vec type embeddings) but was restricted to sentences. We desire to produce longer responses corresponding to one party's part in a two-party dialogue, but simultaneously to exploit the structure of word2vec representations.
 
-Thus we model our text as a series of exchanges, where each exchange is a sequence of words (or tokens). In order to make our model maximally general we represent punctuation marks as tokens in the same class as words. Thus the sequence "hello, my name is Charlie Parker. I play bebop" whould be represented (<hello> <,> <my> <name> <is> <Charlie> <Parker> <.> <I> <play> <bebop>.
+Thus we model our text as a series of exchanges, where each exchange is a sequence of words (or tokens). In order to make our model maximally general we represent punctuation marks as tokens in the same class as words. Thus the sequence "hello, my name is Charlie Parker. I play bebop" whould be represented (<hello> <,> <my> <name> <is> <Charlie> <Parker> <.> <I> <play> <bebop> <EOR> where EOR is the only special token, one which signifies that the sentence is complete.
 
 \item \textbf{Capitaization:} To capture captialization, we automatically capitalize words that come after periods in post-processing.
 
