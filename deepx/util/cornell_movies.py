@@ -3,11 +3,13 @@ from tqdm import tqdm
 
 from word2vec import train, load_model
 from tokenize import tokenize_sentence, tokenize_word
+from vocab import Vocabulary
 
 class CornellMoviesDataset(object):
 
-    def __init__(self, data_dir):
+    def __init__(self, data_dir, word_size=100):
         self.data_dir = data_dir
+        self.word_size = word_size
 
         self.movies = {}
         with open(self.data_dir / 'movie_titles_metadata.txt') as fp:
@@ -27,17 +29,17 @@ class CornellMoviesDataset(object):
                 conversation = Conversation.from_line(line, self.lines)
                 self.conversations.append(conversation)
 
-    def train_word2vec(self, model_name, word_size=100, force=False):
+    def train_word2vec(self, model_name, force=False):
         sentences = []
         if (self.data_dir / model_name).exists() and not force:
-            return load_model(self.data_dir / model_name)
+            return Vocabulary(load_model(self.data_dir / model_name), self.word_size)
         for conversation in tqdm(self.conversations):
             for line in conversation.lines:
                 text = line.raw_text.lower() + " eor"
                 sentences.extend([tokenize_word(s) for s in tokenize_sentence(text)])
-        w2v = train(self.data_dir, sentences, model_name, min_count=1, size=word_size)
+        w2v = train(self.data_dir, sentences, model_name, min_count=1, size=self.word_size)
         assert 'eor' in w2v.vocab, "No EOR token added to vocabulary"
-        return w2v
+        return Vocabulary(w2v, self.word_size)
 
 class Movie(object):
 
@@ -73,11 +75,11 @@ class Line(object):
         line = Line(line[0], movies[line[2]], line[3], line[4])
         return line
 
-    def as_matrix(self, w2v):
+    def as_matrix(self, vocab):
         tokens = tokenize_word(self.raw_text.lower())
-        mat = np.zeros((len(tokens), w2v.layer1_size))
+        mat = np.zeros((len(tokens), vocab.w2v.layer1_size))
         for i, token in enumerate(tokens):
-            mat[i] = w2v[token]
+            mat[i] = vocab.w2v[token]
         return mat
 
 class Conversation(object):
@@ -100,5 +102,5 @@ class Conversation(object):
             ["%s: %s" % (l.character, l.raw_text) for l in self.lines]
         )
 
-    def as_sequence(self, w2v):
-        return [l.as_matrix(w2v) for l in self.lines]
+    def as_sequence(self, vocab):
+        return [l.as_matrix(vocab) for l in self.lines]

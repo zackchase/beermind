@@ -1,18 +1,19 @@
+import numpy as np
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 from path import Path
 from deepx.util import movies
+from deepx.sequence import ConversationModel
 
+word_size = 100
 data_dir = Path('data/movies')
 
-dataset = movies.CornellMoviesDataset(data_dir)
+dataset = movies.CornellMoviesDataset(data_dir, word_size=word_size)
 
-w2v = dataset.train_word2vec('test.w2v')
+vocab = dataset.train_word2vec('test.w2v')
 
-print "Conversation"
-print dataset.conversations[0]
+cons = ConversationModel('convmodel', vocab, 10, num_layers=1).compile()
 
-print "First line converted to matrices"
-mat = dataset.conversations[0].lines[0].as_matrix(w2v)
-print mat
-print mat.shape
+out, state = cons.encode(dataset.conversations[0].lines[0].as_matrix(vocab)[:, np.newaxis],
+                         np.zeros((1, 1, 10)),
+                         np.zeros((1, 1, 10)))

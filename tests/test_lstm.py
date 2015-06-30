@@ -1,6 +1,6 @@
 import numpy as np
 import unittest
-from deepx.lstm import LSTM
+from deepx.nn import LSTM
 
 def logistic(x):
     return 1.0/(1.0 + np.exp(-x))
