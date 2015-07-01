@@ -26,17 +26,76 @@
 
 \begin{document}
 
-\title{Playing the Imitation Game:  A Recurrent Neural \\
- Network Chatbot with N-Sequence Memory}
+% \title{Playing the Imitation Game:  A Recurrent Neural \\
+% Network Chatbot with N-Sequence Memory}
 
-\author{Zachary C. Lipton, Sharad Vikram\\
+\title{Sequence of (Sequence to Sequence) Learning: \\
+Modeling Extended Dialogues with RNNs}
+
+\author{Zachary C. Lipton$^1$, Sharad Vikram$^1$\\
 University of California, San Diego\\
-\texttt{\{zlipton, svikram\}@cs.ucsd.edu, svikram@cs.ucsd.edu}
+\texttt{\{zlipton, svikram\}@cs.ucsd.edu}
 }
 
+\date{June 5th, 2015}
+\maketitle
+
+
 \begin{abstract}
-We describe a Recurrent Neural Network (RNN) for modeling long conversations, spanning many exchanges. Our system captures long term time dependencies and allows information to travel across many time steps.
+We present a word-level Recurrent Neural Network (RNN) architecture
+for modeling dialogue across long conversations.
+Unlike previous sequence to sequence models
+our system captures dependencies across long exchanges.
+Additionally, our setup allow each agent's part in an exchange
+to be longer than a sentence.
+This is accomplished by modeling punctuation marks as words.
+In this paper, we fully explain the architecture,
+empirically validate its utility,
+and present web-based framework for perpetual learning
+by interacting with humans in a web browser.
+
+
 \end{abstract}
+
+
+\section{Introduction}
+\section{Rules of The Game}
+In our model, dialogue consists
+of \emph{exchanges} between two parties, called \emph{agents}.
+Dialogue procedes as follows.
+Each agent issues a block of text,
+which we call a \emph{part}.
+A \emph{part} may be as short as a single word or arbitrarily long.
+In essence, a part is a sequence of \emph{tokens}.
+\emph{Tokens} consist mostly of words,
+but also include punctuation marks.
+Each \emph{part} is terminated by a special token called \emph{<EOP>}.
+Thus, the phrase ``Hey, want to grab coffee?"
+would be encoded as follows: <hey> <,> <want> <to> <grab> <coffee> <?> <EOP>.
+
+An \emph{exchange} is a pair of parts, issued one apiece by each of the agents.
+An example exchange follows: \\
+A: Hey, want to grab coffee?\\
+B: Sure, where?\\
+A conversation is modeled as simply a sequence of exchanges.
+
+The model allows us to capture most aspects of two-party dialogue
+as might occur in an online chat.
+However, there are some minor restictions.
+For example, our model has no notion of physical time.
+Once agent A has issued a \emph{part},
+it waits until B replies.
+A has no opportunity to impatiently resume typing.
+We are content to ignore this limitation here but note
+that it can be cirvumvented
+by setting conditions under which B's reply
+is considered to be simply the end-of-part token <EOP>.
+
+
+\section{The Sequence of (Sequence to Sequence) Model}
+\section{Results}
+\section{Perpetual Learning by Playing the Imitation Game}
+\section{Conclusions}
 
 
 \section{Problem with Encoder Decoder Models}
