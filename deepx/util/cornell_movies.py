@@ -82,6 +82,13 @@ class Line(object):
             mat[i] = vocab.w2v[token]
         return mat
 
+    def as_softmax(self, vocab):
+        tokens = tokenize_word(self.raw_text.lower())
+        mat = np.zeros((len(tokens), vocab.vocab_size))
+        for i, token in enumerate(tokens):
+            mat[i, vocab.forward_map[token]] = 1
+        return mat
+
 class Conversation(object):
 
     def __init__(self, lines, movie):
