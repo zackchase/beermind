@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import theano
 import theano.tensor as T
@@ -22,6 +23,7 @@ class LSTM(ParameterModel):
                  use_input_peep=False, use_output_peep=False, use_forget_peep=False,
                  use_tanh_output=True, seed=None):
         super(LSTM, self).__init__(name)
+        logging.debug("Creating LSTM<%s>" % name)
         self.n_input = n_input
         self.n_hidden = n_hidden
         self.num_layers = num_layers
@@ -65,7 +67,6 @@ class LSTM(ParameterModel):
             self.init_parameter('W_gl', self.initialize_weights((self.num_layers - 1, self.n_hidden, self.n_hidden)))
 
     def layer_step(self, X, previous_hidden, previous_state, layer):
-        print "Layer step", self.name, layer
         if layer == 0:
             Wi = self.get_parameter('W_ix')
             Wo = self.get_parameter('W_ox')
@@ -110,7 +111,6 @@ class LSTM(ParameterModel):
             Po = self.get_parameter('P_o')
             output_gate = T.nnet.sigmoid(T.dot(X, Wo) + T.dot(previous_hidden, Uo) + T.dot(previous_state, Po) + bo)
         else:
-            print "WAT", theano.pprint(Uo)
             output_gate = T.nnet.sigmoid(T.dot(X, Wo) + T.dot(previous_hidden, Uo) + bo)
         if self.use_tanh_output:
             output = output_gate * T.tanh(state)
@@ -119,9 +119,9 @@ class LSTM(ParameterModel):
 
         return output, state
 
-    @theanify(T.matrix('X'), T.tensor3('previous_hidden'), T.tensor3('previous_state'))
+    #@theanify(T.matrix('X'), T.tensor3('previous_hidden'), T.tensor3('previous_state'))
     def step(self, X, previous_hidden, previous_state):
-        print "STEP WAS CALLED", self.name
+        print self.name
         out, state = self.layer_step(X, previous_hidden[:, 0, :], previous_state[:, 0, :], 0)
         outs = [out]
         states = [state]

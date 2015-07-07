@@ -1,3 +1,4 @@
+import logging
 import theano
 import numpy as np
 
@@ -14,7 +15,7 @@ class ParameterModel(Theanifiable):
         return (np.random.rand(*shape) - 0.5) / 1000.0
 
     def init_parameter(self, name, value):
-        print "Creating theano parameter", "%s-%s" % (self.name, name)
+        logging.debug("Creating parameter %s-%s" % (self.name, name))
         assert name not in self.parameters, "Cannot re-initialize theano shared variable, use set_parameter_value"
         self.parameters[name] = theano.shared(value, name='%s-%s' % (self.name, name))
 

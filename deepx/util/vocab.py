@@ -21,3 +21,17 @@ class Vocabulary(object):
 
     def get_vector(self, word):
         return self.w2v[word]
+
+class CharacterVocabulary(object):
+
+    def __init__(self):
+        self.forward_map = {}
+        self.backward_map = {}
+        self.vocab_size = 0
+
+    def add_text(self, text):
+        for char in text:
+            if char not in self.forward_map:
+                self.forward_map[char] = self.vocab_index
+                self.reverse_map[self.vocab_index] = char
+                self.vocab_size += 1
