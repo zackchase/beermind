@@ -86,7 +86,7 @@ class Line(object):
         self.movie = movie
         self.character = character
         self.raw_text = text.decode('utf-8', 'ignore')
-        self.tokens = tokenize_word(self.raw_text.lower())[:20]
+        self.tokens = tokenize_word(self.raw_text.lower())[:1]
         self.length = len(self.tokens)
 
     @staticmethod
@@ -105,12 +105,14 @@ class Line(object):
             mat[i] = vocab.w2v[token]
         return mat, mask
 
-    def as_softmax(self, vocab):
+    def as_softmax(self, vocab, max_seq_length):
         tokens = self.tokens
-        mat = np.zeros((len(tokens), vocab.vocab_size))
+        mat = np.zeros((max_seq_length, vocab.vocab_size))
+        mask = np.zeros(max_seq_length)
         for i, token in enumerate(tokens):
             mat[i, vocab.forward_map[token]] = 1
-        return mat
+            mask[i] = 1
+        return mat, mask
 
 class Conversation(object):
 

@@ -121,7 +121,6 @@ class LSTM(ParameterModel):
 
     #@theanify(T.matrix('X'), T.tensor3('previous_hidden'), T.tensor3('previous_state'))
     def step(self, X, previous_hidden, previous_state):
-        print self.name
         out, state = self.layer_step(X, previous_hidden[:, 0, :], previous_state[:, 0, :], 0)
         outs = [out]
         states = [state]

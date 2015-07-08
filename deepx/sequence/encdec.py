@@ -85,7 +85,7 @@ class Decoder(LSTM):
             output = self.output.forward(candidate_hidden[:, -1, :])
             outputs.append(output)
             input = self.word_matrix[output.argmax(axis=1)]
-        return T.stack(*outputs), previous_hidden, previous_state
+        return T.swapaxes(T.stack(*outputs), 0, 1), previous_hidden, previous_state
 
     def get_parameters(self):
         return super(Decoder, self).get_parameters() + self.output.get_parameters()

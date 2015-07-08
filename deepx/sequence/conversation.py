@@ -11,7 +11,7 @@ from encdec import Encoder, Decoder
 
 class ConversationModel(ParameterModel):
 
-    def __init__(self, name, vocab, n_hidden, max_seq_length, num_layers=2):
+    def __init__(self, name, vocab, n_hidden, max_seq_length, num_layers=1):
         super(ConversationModel, self).__init__(name)
         self.name = name
         self.vocab = vocab
@@ -55,6 +55,8 @@ class ConversationModel(ParameterModel):
                               )
         return rval
 
+
+    #@theanify(T.tensor3('in_line'), T.matrix('in_mask'), T.matrix('out_mask'), T.matrix('start_token'))
     def seq2seq(self, in_line, in_mask, out_mask, start_token):
         N, S, D = in_line.shape
 
@@ -69,6 +71,19 @@ class ConversationModel(ParameterModel):
         decoder_output, decoder_hidden, decoder_state = self.decoder.decode(start_token, out_mask, encoder_hidden, encoder_state)
         return decoder_output
 
+    @theanify(T.tensor3('in_lines'), T.matrix('in_masks'), T.tensor3('out_lines'), T.matrix('out_masks'), T.matrix('start_token'))
+    def loss2(self, in_line, in_mask, out_line, out_mask, start_token):
+        N, _, _ = out_line.shape
+        out_pred = self.seq2seq(in_line, in_mask, out_mask, start_token)
+        out_pred *= out_mask[:, :, np.newaxis]
+        out_pred = out_pred.reshape((self.max_seq_length * N, self.vocab_size))
+        out_line = out_line.reshape((self.max_seq_length * N, self.vocab_size))
+        return T.sum((out_pred - out_line) ** 2) #T.nnet.categorical_crossentropy(out_pred, out_line))
+
+    def gradient2(self, in_line, in_mask, out_line, out_mask, start_token):
+        loss = self.loss2(in_line, in_mask, out_line, out_mask, start_token)
+        return T.grad(cost=loss, wrt=self.get_parameters())
+
     #@theanify(T.tensor3('in_line'), T.matrix('in_mask'), T.matrix('out_line'), T.matrix('out_mask'), T.matrix('start_token'))
     def loss(self, in_lines, in_masks, out_lines, out_masks, start_token):
         C, N, _, _ = out_lines.shape
@@ -82,12 +97,38 @@ class ConversationModel(ParameterModel):
         loss = self.loss(in_line, in_mask, out_line, out_mask, start_token)
         return T.grad(cost=loss, wrt=self.get_parameters())
 
-    @theanify(T.tensor4('in_lines'), T.tensor3('in_masks'), T.tensor4('out_lines'), T.tensor3('out_masks'), T.matrix('start_token'), updates="rmsprop_updates")
+    #@theanify(T.tensor4('in_lines'), T.tensor3('in_masks'), T.tensor4('out_lines'), T.tensor3('out_masks'), T.matrix('start_token'), updates="rmsprop_updates")
     def rmsprop(self, in_lines, in_masks, out_lines, out_masks, start_token):
         return self.loss(in_lines, in_masks, out_lines, out_masks, start_token)
 
+    @theanify(T.tensor3('in_lines'), T.matrix('in_masks'), T.tensor3('out_lines'), T.matrix('out_masks'), T.matrix('start_token'), updates="rmsprop_updates2")
+    def rmsprop2(self, in_line, in_mask, out_line, out_mask, start_token):
+        return self.loss2(in_line, in_mask, out_line, out_mask, start_token)
+
+
     def rmsprop_updates(self, in_lines, in_masks, out_lines, out_masks, start_token):
         grads = self.gradient(in_lines, in_masks, out_lines, out_masks, start_token)
+        next_average_gradient = [0.95 * avg + 0.05 * g for g, avg in zip(grads, self.average_gradient)]
+        next_rms = [0.95 * rms + 0.05 * (g ** 2) for g, rms in zip(grads, self.average_rms)]
+        next_parameter = [0.9 * param_update - 1e-4 * g / T.sqrt(rms - avg ** 2 + 1e-4)
+                          for g, avg, rms, param_update in zip(grads,
+                                                               self.average_gradient,
+                                                               self.average_rms,
+                                                               self.parameter_update)]
+
+        average_gradient_update = [(avg, next_avg) for avg, next_avg in zip(self.average_gradient,
+                                                                            next_average_gradient)]
+        rms_update = [(rms, rms2) for rms, rms2 in zip(self.average_rms,
+                                                               next_rms)]
+        next_parameter_update = [(param, param_update) for param, param_update in zip(self.parameter_update,
+                                                                                      next_parameter)]
+
+        updates = [(p, p + param_update) for p, param_update in zip(self.get_parameters(), next_parameter)]
+
+        return updates + average_gradient_update + rms_update + next_parameter_update
+
+    def rmsprop_updates2(self, in_line, in_mask, out_line, out_mask, start_token):
+        grads = self.gradient2(in_line, in_mask, out_line, out_mask, start_token)
         next_average_gradient = [0.95 * avg + 0.05 * g for g, avg in zip(grads, self.average_gradient)]
         next_rms = [0.95 * rms + 0.05 * (g ** 2) for g, rms in zip(grads, self.average_rms)]
         next_parameter = [0.9 * param_update - 1e-4 * g / T.sqrt(rms - avg ** 2 + 1e-4)
