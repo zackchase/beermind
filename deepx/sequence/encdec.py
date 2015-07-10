@@ -3,7 +3,6 @@ import theano.tensor as T
 from theanify import theanify
 
 import logging
-logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s - %(message)s', level=logging.DEBUG)
 
 from deepx.nn import LSTM
 
