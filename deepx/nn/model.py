@@ -1,18 +1,21 @@
 import logging
 import theano
 import numpy as np
-
+from helper import floatX
 from theanify import Theanifiable
 
 class ParameterModel(Theanifiable):
-
+    """
+    A ParameterModel is an object containing compilable methods and parameters which are updated by these methods given sume input.
+    parameters  A dictionary of parameters
+    """
     def __init__(self, name):
         super(ParameterModel, self).__init__()
         self.name = name
         self.parameters = {}
 
     def initialize_weights(self, shape):
-        return (np.random.rand(*shape) - 0.5) / 1000.0
+        return floatX((np.random.rand(*shape) - 0.5) / 1000.0)
 
     def init_parameter(self, name, value):
         logging.debug("Creating parameter %s-%s" % (self.name, name))
