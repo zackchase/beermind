@@ -1,2 +1,3 @@
 import util
-import sequence
+import nn
+# import sequence
