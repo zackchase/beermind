@@ -18,12 +18,17 @@ def create_optimizer(pm, *args):
         def rmsprop(self, *args):
             return self.parameter_model.cost(*args)
 
-        # @theanify(*args, updates="gradient_descent_updates")
-        # def gradient_descent(self, *args):
-            # return self.parameter_model.cost(*args)
+        @theanify(*args, updates="sgd_updates")
+        def sgd(self, *args):
+            return self.parameter_model.cost(*args)
 
         def gradient(self, *args):
             return T.grad(self.parameter_model.cost(*args)[0], self.get_parameters())
+
+        def sgd_updates(self, *args):
+            grads = self.gradient(*args)
+            updates = [(p, p - 0.1 * g) for p, g in zip(self.get_parameters(), grads)]
+            return updates
 
         def rmsprop_updates(self, *args):
             grads = self.gradient(*args)
