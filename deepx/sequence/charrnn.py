@@ -3,39 +3,7 @@ import theano
 import theano.tensor as T
 
 from theanify import theanify
-from deepx.nn import ParameterModel, LSTMLayer, Softmax
-
-class LSTM(ParameterModel):
-    def __init__(self, name, n_input, n_hidden=10, n_layers=2):
-        super(LSTM, self).__init__(name)
-
-        self.n_input = n_input
-        self.n_hidden = n_hidden
-        self.n_layers = n_layers
-        assert self.n_layers >= 1
-        self.layers = []
-        self.input_layer = LSTMLayer('%s-input' % name,
-                                     self.n_input,
-                                     self.n_hidden)
-        for i in xrange(self.n_layers - 1):
-            self.layers.append(LSTMLayer('%s-layer-%u' % (name, i),
-                                         self.n_hidden,
-                                         self.n_hidden))
-
-    def forward(self, X, previous_state, previous_hidden):
-        output, state = self.input_layer.step(X, previous_state[:, 0, :], previous_hidden[:, 0, :])
-        hiddens, states = [output], [state]
-        for i, layer in enumerate(self.layers):
-            output, state = layer.step(output, previous_state[:, i + 1, :], previous_hidden[:, i + 1, :])
-            hiddens.append(output)
-            states.append(state)
-        return T.swapaxes(T.stack(*hiddens), 0, 1), T.swapaxes(T.stack(*states), 0, 1)
-
-    def get_parameters(self):
-        params = self.input_layer.get_parameters()
-        for layer in self.layers:
-            params += layer.get_parameters()
-        return params
+from deepx.nn import ParameterModel, LSTM, Softmax
 
 class CharacterRNN(ParameterModel):
 
@@ -46,7 +14,7 @@ class CharacterRNN(ParameterModel):
 
         self.vocab_size = encoding.index
 
-        self.lstm = LSTM('%s-charrnn' % name, 1,
+        self.lstm = LSTM('%s-charrnn' % name, self.vocab_size,
                          n_hidden=self.n_hidden,
                          n_layers=self.n_layers)
         self.output = Softmax('%s-softmax' % name, n_hidden, self.vocab_size)

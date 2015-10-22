@@ -47,8 +47,8 @@ class WindowedBatcher(object):
                 y[i, c, int(X[i, c, 0])] = 1
 
         assert (y.argmax(axis=2) == X.ravel().reshape(X.shape[:2])).all()
+        X = y[:, :-1, :]
         y = y[:, 1:, :]
-        X = X[:, :-1, :]
 
         assert y.shape[1] == self.sequence_length - 1 and X.shape[1] == self.sequence_length - 1
 

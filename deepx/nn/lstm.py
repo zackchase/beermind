@@ -6,7 +6,7 @@ from theanify import theanify
 
 from model import ParameterModel
 
-def LSTMLayer(*args):
+def LSTMLayer(*args, **kwargs):
     class LSTMLayer(ParameterModel):
 
         def __init__(self, name, n_input, n_output,
@@ -132,4 +132,39 @@ def LSTMLayer(*args):
             for param, value in state['parameters'].items():
                 layer.set_parameter_value(param, value)
             return layer
-    return LSTMLayer(*args)
+    return LSTMLayer(*args, **kwargs)
+
+def LSTM(*args, **kwargs):
+    class LSTM(ParameterModel):
+        def __init__(self, name, n_input, n_hidden=10, n_layers=2):
+            super(LSTM, self).__init__(name)
+
+            self.n_input = n_input
+            self.n_hidden = n_hidden
+            self.n_layers = n_layers
+            assert self.n_layers >= 1
+            self.layers = []
+            self.input_layer = LSTMLayer('%s-input' % name,
+                                        self.n_input,
+                                        self.n_hidden)
+            for i in xrange(self.n_layers - 1):
+                self.layers.append(LSTMLayer('%s-layer-%u' % (name, i),
+                                            self.n_hidden,
+                                            self.n_hidden))
+
+        def forward(self, X, previous_state, previous_hidden):
+            output, state = self.input_layer.step(X, previous_state[:, 0, :], previous_hidden[:, 0, :])
+            hiddens, states = [output], [state]
+            for i, layer in enumerate(self.layers):
+                output, state = layer.step(output, previous_state[:, i + 1, :], previous_hidden[:, i + 1, :])
+                hiddens.append(output)
+                states.append(state)
+            return T.swapaxes(T.stack(*hiddens), 0, 1), T.swapaxes(T.stack(*states), 0, 1)
+
+        def get_parameters(self):
+            params = self.input_layer.get_parameters()
+            for layer in self.layers:
+                params += layer.get_parameters()
+            return params
+
+    return LSTM(*args, **kwargs)
