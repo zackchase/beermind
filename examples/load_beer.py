@@ -5,7 +5,7 @@ from dataset.sequence import *
 from dataset.batch import WindowedBatcher
 
 import dataset
-from deepx.optimize import SGD, RMSProp
+from deepx.optimize import SGD, RMSProp, Momentum
 from deepx.sequence import CharacterRNN
 
 reviews, beers = dataset.beer.load_data('data/beer')
@@ -19,15 +19,15 @@ text_encoding = dataset.OneHotEncoding()
 text_encoding.build_encoding([char_seq])
 
 num_seq = char_seq.encode(text_encoding)
-batcher = WindowedBatcher(num_seq, text_encoding, sequence_length=50, batch_size=500)
+batcher = WindowedBatcher(num_seq, text_encoding, sequence_length=50, batch_size=1)
 
-charrnn = CharacterRNN('2pac', text_encoding, n_layers=2, n_hidden=512)
+charrnn = CharacterRNN('2pac', text_encoding, n_layers=2, n_hidden=16)
 charrnn.compile()
+X, y = batcher.next_batch()
 
 def train(n_iterations):
     state = None
     for i in xrange(n_iterations):
-        X, y = batcher.next_batch()
         if state is None:
             state = np.zeros((X.shape[1], charrnn.n_layers, charrnn.n_hidden))
         error, state = optimizer.optimize(X, state, y)

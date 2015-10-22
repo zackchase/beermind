@@ -54,7 +54,7 @@ class CharacterRNN(ParameterModel):
                               n_steps=S)
         return encoder_output, encoder_state, softmax_output
 
-    @theanify(T.dvector('start_token'), T.iscalar('length'), T.dscalar('temperature'), returns_updates=True)
+    @theanify(T.fvector('start_token'), T.iscalar('length'), T.fscalar('temperature'), returns_updates=True)
     def generate(self, start_token, length, temperature):
         start_token = start_token[:, np.newaxis].T
         N = 1

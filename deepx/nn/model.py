@@ -33,4 +33,3 @@ class ParameterModel(Theanifiable):
 
     def get_parameters(self):
         return self.parameters.values()
-
