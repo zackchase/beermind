@@ -25,7 +25,7 @@ class CharacterRNN(ParameterModel):
         S, N, V = y.shape
         y = y.reshape((S * N, V))
         ypred = ypred.reshape((S * N, V))
-        return T.nnet.categorical_crossentropy(ypred, y).sum(), state
+        return T.nnet.categorical_crossentropy(ypred, y).mean(), state
 
     @theanify(T.tensor3('X'), T.tensor3('state'))
     def forward(self, X, state):
