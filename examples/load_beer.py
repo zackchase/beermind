@@ -23,7 +23,7 @@ batcher = WindowedBatcher(num_seq, text_encoding, sequence_length=50, batch_size
 
 charrnn = CharacterRNN('2pac', text_encoding, n_layers=2, n_hidden=512)
 
-optimizer = SGD(charrnn, [T.tensor3('X'), T.tensor3('state'), T.tensor3('y')])
+optimizer = RMSProp(charrnn, [T.tensor3('X'), T.tensor3('state'), T.tensor3('y')])
 
 state = None
 for _ in xrange(100):

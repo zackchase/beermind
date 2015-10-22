@@ -5,16 +5,16 @@ from optimizer import Optimizer
 class RMSProp(Optimizer):
 
     def __init__(self, parameter_model, args):
-        super(RMSProp, self).__init__(parameter_model, args)
+        self.args = args
+        self.parameter_model = parameter_model
 
         self.average_gradient = [theano.shared(p.get_value() * 0) for p in self.get_parameters()]
         self.average_rms = [theano.shared(p.get_value() * 0) for p in self.get_parameters()]
         self.parameter_update = [theano.shared(p.get_value() * 0) for p in self.get_parameters()]
 
-    def updates(self):
-        return [(p, p - self.training_rate * g) for p, g in zip(self.get_parameters(), self.grads)]
+        super(RMSProp, self).__init__(parameter_model, args)
 
-    def rmsprop(self):
+    def updates(self, *args):
         grads = self.grads
         next_average_gradient = [0.95 * avg + 0.05 * g for g, avg in zip(grads, self.average_gradient)]
         next_rms = [0.95 * rms + 0.05 * (g ** 2) for g, rms in zip(grads, self.average_rms)]

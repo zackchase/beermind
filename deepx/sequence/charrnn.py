@@ -53,5 +53,32 @@ class CharacterRNN(ParameterModel):
                               n_steps=S)
         return encoder_output, encoder_state, softmax_output
 
+    @theanify(T.vector('start_token'), T.scalar('length'), T.scalar('temperature'))
+    def generate(self, start_token, length, temperature):
+        N = 1
+        H = self.lstm.n_hidden
+        L = self.lstm.n_layers
+        O = self.output.n_output
+
+        def step(input, previous_hidden, previous_state):
+            lstm_hidden, state = self.lstm.forward(input, previous_hidden, previous_state)
+            final_output = self.output.forward(lstm_hidden[:, -1, :])
+            return final_output, lstm_hidden, state
+
+        hidden = T.unbroadcast(T.alloc(np.array(0).astype(theano.config.floatX), N, L, H), 1)
+        state = T.unbroadcast(T.alloc(np.array(0).astype(theano.config.floatX), N, L, H), 1)
+
+        (encoder_output, encoder_state, softmax_output), _ = theano.scan(step,
+                              outputs_info=[
+                                            start_token,
+                                            hidden,
+                                            state,
+                                            T.alloc(np.asarray(0).astype(theano.config.floatX),
+                                                    N,
+                                                    O),
+                                           ],
+                              n_steps=length)
+        return encoder_output, encoder_state, softmax_output
+
     def get_parameters(self):
         return self.lstm.get_parameters() + self.output.get_parameters()
