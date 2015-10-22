@@ -1,4 +1,3 @@
-import theano
 import theano.tensor as T
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -6,7 +5,7 @@ from dataset.sequence import *
 from dataset.batch import WindowedBatcher
 
 import dataset
-from deepx.nn import LSTMLayer, Softmax, create_optimizer
+from deepx.optimize import SGD, RMSProp
 from deepx.sequence import CharacterRNN
 
 reviews, beers = dataset.beer.load_data('data/beer')
@@ -24,15 +23,13 @@ batcher = WindowedBatcher(num_seq, text_encoding, sequence_length=50, batch_size
 
 charrnn = CharacterRNN('2pac', text_encoding, n_layers=2, n_hidden=512)
 
-optimizer = create_optimizer(charrnn, [T.tensor3('X'), T.tensor3('state'), T.tensor3('y')])
-optimizer.compile()
-
+optimizer = SGD(charrnn, [T.tensor3('X'), T.tensor3('state'), T.tensor3('y')])
 
 state = None
 for _ in xrange(100):
     X, y = batcher.next_batch()
     if state is None:
         state = np.zeros((X.shape[1], charrnn.n_layers, charrnn.n_hidden))
-    error, state = optimizer.sgd(X, state, y)
+    error, state = optimizer.optimize(X, state, y)
     state = state[-1]
     print error
