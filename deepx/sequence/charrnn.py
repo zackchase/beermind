@@ -22,7 +22,6 @@ class CharacterRNN(ParameterModel):
         self.output = Softmax('%s-softmax' % name, n_hidden, self.vocab_size)
         self.rng = RandomStreams(seed=1337)
 
-    @theanify(T.tensor3('X'), T.tensor3('state'), T.tensor3('y'))
     def cost(self, X, state, y):
         _, state, ypred = self.forward(X, state)
         S, N, V = y.shape
@@ -30,7 +29,6 @@ class CharacterRNN(ParameterModel):
         ypred = ypred.reshape((S * N, V))
         return T.nnet.categorical_crossentropy(ypred, y).mean(), state
 
-    @theanify(T.tensor3('X'), T.tensor3('state'))
     def forward(self, X, state):
         S, N, D = X.shape
         H = self.lstm.n_hidden
@@ -56,38 +54,33 @@ class CharacterRNN(ParameterModel):
                               n_steps=S)
         return encoder_output, encoder_state, softmax_output
 
-    @theanify(T.vector('start_token'), T.scalar('length'), T.scalar('temperature'))
+    @theanify(T.dvector('start_token'), T.iscalar('length'), T.dscalar('temperature'), returns_updates=True)
     def generate(self, start_token, length, temperature):
-        D = start_token.shape[0]
+        start_token = start_token[:, np.newaxis].T
         N = 1
         H = self.lstm.n_hidden
         L = self.lstm.n_layers
-        O = self.output.n_output
 
-        eye = T.eye(D)
-
-        def step(input, previous_hidden, previous_state):
+        def step(input, previous_hidden, previous_state, temperature):
             lstm_hidden, state = self.lstm.forward(input, previous_hidden, previous_state)
             final_output = self.output.forward(lstm_hidden[:, -1, :])
             final_output = final_output + temperature
             final_output /= final_output.sum()
-            sample = eye[self.rng.multinomial(n=1, pvals=final_output)[0]]
+            sample = self.rng.multinomial(n=1, size=(1,), pvals=final_output, dtype=theano.config.floatX)
             return sample, lstm_hidden, state
 
         hidden = T.unbroadcast(T.alloc(np.array(0).astype(theano.config.floatX), N, L, H), 1)
         state = T.unbroadcast(T.alloc(np.array(0).astype(theano.config.floatX), N, L, H), 1)
 
-        (softmax_output, _, _), _ = theano.scan(step,
+        (softmax_output, _, _), updates = theano.scan(step,
                               outputs_info=[
                                             start_token,
                                             hidden,
                                             state,
-                                            T.alloc(np.asarray(0).astype(theano.config.floatX),
-                                                    N,
-                                                    O),
                                            ],
+                              non_sequences=[temperature],
                               n_steps=length)
-        return softmax_output
+        return softmax_output[:, 0, :], updates
 
     def get_parameters(self):
         return self.lstm.get_parameters() + self.output.get_parameters()
