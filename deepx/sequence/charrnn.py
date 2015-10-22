@@ -2,6 +2,8 @@ import numpy as np
 import theano
 import theano.tensor as T
 
+from theano.tensor.shared_randomstreams import RandomStreams
+
 from theanify import theanify
 from deepx.nn import ParameterModel, LSTM, Softmax
 
@@ -18,6 +20,7 @@ class CharacterRNN(ParameterModel):
                          n_hidden=self.n_hidden,
                          n_layers=self.n_layers)
         self.output = Softmax('%s-softmax' % name, n_hidden, self.vocab_size)
+        self.rng = RandomStreams(seed=1337)
 
     @theanify(T.tensor3('X'), T.tensor3('state'), T.tensor3('y'))
     def cost(self, X, state, y):
@@ -55,20 +58,26 @@ class CharacterRNN(ParameterModel):
 
     @theanify(T.vector('start_token'), T.scalar('length'), T.scalar('temperature'))
     def generate(self, start_token, length, temperature):
+        D = start_token.shape[0]
         N = 1
         H = self.lstm.n_hidden
         L = self.lstm.n_layers
         O = self.output.n_output
 
+        eye = T.eye(D)
+
         def step(input, previous_hidden, previous_state):
             lstm_hidden, state = self.lstm.forward(input, previous_hidden, previous_state)
             final_output = self.output.forward(lstm_hidden[:, -1, :])
-            return final_output, lstm_hidden, state
+            final_output = final_output + temperature
+            final_output /= final_output.sum()
+            sample = eye[self.rng.multinomial(n=1, pvals=final_output)[0]]
+            return sample, lstm_hidden, state
 
         hidden = T.unbroadcast(T.alloc(np.array(0).astype(theano.config.floatX), N, L, H), 1)
         state = T.unbroadcast(T.alloc(np.array(0).astype(theano.config.floatX), N, L, H), 1)
 
-        (encoder_output, encoder_state, softmax_output), _ = theano.scan(step,
+        (softmax_output, _, _), _ = theano.scan(step,
                               outputs_info=[
                                             start_token,
                                             hidden,
@@ -78,7 +87,7 @@ class CharacterRNN(ParameterModel):
                                                     O),
                                            ],
                               n_steps=length)
-        return encoder_output, encoder_state, softmax_output
+        return softmax_output
 
     def get_parameters(self):
         return self.lstm.get_parameters() + self.output.get_parameters()
