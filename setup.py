@@ -8,7 +8,8 @@ setup(
     license = "MIT",
     keywords = "theano",
     packages=find_packages(include=[
-        'deepx'
+        'deepx',
+        'dataset',
     ]),
     classifiers=[
 ],

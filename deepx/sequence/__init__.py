@@ -1,1 +1,1 @@
-from conversation import ConversationModel
+from charrnn import CharacterRNN
