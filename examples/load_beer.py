@@ -23,7 +23,7 @@ batcher = WindowedBatcher(num_seq, text_encoding, sequence_length=50, batch_size
 D = text_encoding.index
 
 charrnn = CharacterRNN('2pac', text_encoding, n_layers=2, n_hidden=512)
-charrnn.compile()
+charrnn.compile_method('generate')
 
 def train(n_iterations):
     state = None
@@ -35,9 +35,9 @@ def train(n_iterations):
         state = state[-1]
         print "Iteration %u:" % (i + 1), error
 
-def generate(length, temperature=0.1):
+def generate(length, temperature=0.0):
     results = charrnn.generate(np.eye(D)[0], length, temperature)
     seq = NumberSequence(results.argmax(axis=1))
     return seq.decode(text_encoding)
 
-optimizer = RMSProp(charrnn, [T.tensor3('X'), T.tensor3('state'), T.tensor3('y')])
+optimizer = RMSProp(charrnn)

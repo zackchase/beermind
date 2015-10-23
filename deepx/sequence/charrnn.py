@@ -42,6 +42,7 @@ class CharacterRNN(ParameterModel):
         self.lstm = load_lstm(state['lstm'])
         self.output = load_softmax(state['output'])
 
+    @theanify(T.tensor3('X'), T.tensor3('state'), T.tensor3('y'))
     def cost(self, X, state, y):
         _, state, ypred = self.forward(X, state)
         S, N, V = y.shape

@@ -4,15 +4,14 @@ from optimizer import Optimizer
 
 class RMSProp(Optimizer):
 
-    def __init__(self, parameter_model, args):
-        self.args = args
-        self.parameter_model = parameter_model
+    def __init__(self, parameter_model):
 
-        self.average_gradient = [theano.shared(p.get_value() * 0) for p in self.get_parameters()]
-        self.average_rms = [theano.shared(p.get_value() * 0) for p in self.get_parameters()]
-        self.parameter_update = [theano.shared(p.get_value() * 0) for p in self.get_parameters()]
+        self.average_gradient = [theano.shared(p.get_value() * 0) for p in parameter_model.get_parameters()]
+        self.average_rms = [theano.shared(p.get_value() * 0) for p in parameter_model.get_parameters()]
+        self.parameter_update = [theano.shared(p.get_value() * 0) for p in parameter_model.get_parameters()]
 
-        super(RMSProp, self).__init__(parameter_model, args)
+        super(RMSProp, self).__init__(parameter_model)
+
 
     def updates(self, *args):
         grads = self.grads
