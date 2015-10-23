@@ -4,7 +4,7 @@ from optimizer import Optimizer
 
 class Momentum(Optimizer):
 
-    def __init__(self, parameter_model, args):
+    def __init__(self, parameter_model):
         self.caches = [theano.shared(p.get_value() * 0) for p in parameter_model.get_parameters()]
 
         super(Momentum, self).__init__(parameter_model, optimize_args=[

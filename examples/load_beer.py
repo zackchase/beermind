@@ -25,7 +25,9 @@ D = text_encoding.index
 charrnn = CharacterRNN('2pac', text_encoding, n_layers=2, n_hidden=512)
 charrnn.compile_method('generate')
 
-optimizer = SGD(charrnn)
+sgd = SGD(charrnn)
+rmsprop = RMSProp(charrnn)
+mom = Momentum(charrnn)
 
 def train(n_iterations, *args):
     state = None
