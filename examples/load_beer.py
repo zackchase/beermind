@@ -25,13 +25,15 @@ D = text_encoding.index
 charrnn = CharacterRNN('2pac', text_encoding, n_layers=2, n_hidden=512)
 charrnn.compile_method('generate')
 
-def train(n_iterations):
+optimizer = SGD(charrnn)
+
+def train(n_iterations, *args):
     state = None
     for i in xrange(n_iterations):
         X, y = batcher.next_batch()
         if state is None:
             state = np.zeros((X.shape[1], charrnn.n_layers, charrnn.n_hidden))
-        error, state = optimizer.optimize(X, state, y)
+        error, state = optimizer.train(X, state, y, *args)
         state = state[-1]
         print "Iteration %u:" % (i + 1), error
 
@@ -40,4 +42,3 @@ def generate(length, temperature=0.0):
     seq = NumberSequence(results.argmax(axis=1))
     return seq.decode(text_encoding)
 
-optimizer = RMSProp(charrnn)

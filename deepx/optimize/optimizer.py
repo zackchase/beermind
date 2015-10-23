@@ -12,7 +12,13 @@ class Optimizer(Theanifiable):
 
         self.cost, self.state = self.parameter_model.cost(*self.cost_args)
         self.grads = T.grad(self.cost, self.get_parameters())
+
         self.compile_method('optimize', args=self.optimize_args + list(self.cost_args))
+
+    def train(self, *args):
+        cost_args = args[:len(self.cost_args)]
+        training_args = args[len(self.cost_args):]
+        return self.optimize(*(training_args + cost_args))
 
     @theanify(updates="updates")
     def optimize(self, *args):
