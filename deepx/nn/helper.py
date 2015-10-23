@@ -1,5 +1,9 @@
 import numpy as np
 import theano
+from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
+
+srng = RandomStreams()
+
 
 def floatX(X):
     return np.asarray(X, dtype=theano.config.floatX)
