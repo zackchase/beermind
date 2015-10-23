@@ -58,7 +58,7 @@ class CharacterRNN(ParameterModel):
 
         def step(input, previous_hidden, previous_state, previous_output):
             lstm_hidden, state = self.lstm.forward(input, previous_hidden, previous_state)
-            final_output = self.output.forward(lstm_hidden[:, -1, :])
+            final_output = self.output.forward(lstm_hidden[:, -1, :], 1.0)
             return lstm_hidden, state, final_output
 
         hidden = T.unbroadcast(T.alloc(np.array(0).astype(theano.config.floatX), N, L, H), 1)
@@ -84,9 +84,7 @@ class CharacterRNN(ParameterModel):
 
         def step(input, previous_hidden, previous_state, temperature):
             lstm_hidden, state = self.lstm.forward(input, previous_hidden, previous_state)
-            final_output = self.output.forward(lstm_hidden[:, -1, :])
-            final_output = final_output + temperature
-            final_output /= final_output.sum()
+            final_output = self.output.forward(lstm_hidden[:, -1, :], temperature)
             sample = self.rng.multinomial(n=1, size=(1,), pvals=final_output, dtype=theano.config.floatX)
             return sample, lstm_hidden, state
 

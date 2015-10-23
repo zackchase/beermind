@@ -18,7 +18,7 @@ text_encoding = dataset.OneHotEncoding(include_start_token=True)
 text_encoding.build_encoding(text_sequences)
 
 num_seq = NumberSequence(np.concatenate([c.encode(text_encoding).seq for c in text_sequences]).ravel())
-batcher = WindowedBatcher(num_seq, text_encoding, sequence_length=50, batch_size=300)
+batcher = WindowedBatcher(num_seq, text_encoding, sequence_length=50, batch_size=500)
 
 D = text_encoding.index
 
@@ -29,7 +29,7 @@ sgd = SGD(charrnn)
 rmsprop = RMSProp(charrnn)
 mom = Momentum(charrnn)
 
-def train(n_iterations, *args):
+def train(optimizer, n_iterations, *args):
     state = None
     for i in xrange(n_iterations):
         X, y = batcher.next_batch()

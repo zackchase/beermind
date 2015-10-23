@@ -17,9 +17,13 @@ def Softmax(*args):
             self.init_parameter('W', self.initialize_weights((self.n_input, self.n_output)))
             self.init_parameter('b', self.initialize_weights((self.n_output,)))
 
-        @theanify(T.matrix('X'))
-        def forward(self, X):
-            return T.nnet.softmax(T.dot(X, self.get_parameter('W')) + self.get_parameter('b'))
+        @theanify(T.matrix('X'), T.scalar('temperature'))
+        def forward(self, X, temperature):
+            return self.softmax(T.dot(X, self.get_parameter('W')) + self.get_parameter('b'), temperature)
+
+        def softmax(self, X, temperature):
+            e_x = T.exp((X - X.max(axis=1, keepdims=True)) / temperature)
+            return e_x / e_x.sum(axis=1, keepdims=True)
 
         def state(self):
             state_params = {}
