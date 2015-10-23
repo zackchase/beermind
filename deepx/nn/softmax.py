@@ -22,8 +22,8 @@ def Softmax(*args):
             return self.softmax(T.dot(X, self.get_parameter('W')) + self.get_parameter('b'), temperature)
 
         def softmax(self, X, temperature):
-            e_x = T.exp((X - X.max(axis=1, keepdims=True)) / temperature)
-            return e_x / e_x.sum(axis=1, keepdims=True)
+            e_x = T.exp((X - X.max(axis=1)[:, None]) / temperature)
+            return e_x / e_x.sum(axis=1)[:, None]
 
         def state(self):
             state_params = {}
@@ -36,11 +36,11 @@ def Softmax(*args):
                 'parameters': state_params
             }
 
-    return Softmax(*args)
+        def load(self, state):
+            self.name = state['name']
+            self.n_input = state['n_input']
+            self.n_output = state['n_output']
+            for param, value in state['parameters'].items():
+                self.set_parameter_value(param, value)
 
-def load_softmax(state):
-    assert len(state) ==  4, state
-    softmax = Softmax(state['name'], state['n_input'], state['n_output'])
-    for param, value in state['parameters'].items():
-        softmax.set_parameter_value(param, value)
-    return softmax
+    return Softmax(*args)

@@ -23,6 +23,7 @@ batcher = WindowedBatcher(num_seq, text_encoding, sequence_length=50, batch_size
 D = text_encoding.index
 
 charrnn = CharacterRNN('2pac', text_encoding, n_layers=2, n_hidden=512)
+charrnn.load_parameters('wat.pkl')
 charrnn.compile_method('generate')
 
 sgd = SGD(charrnn)
@@ -39,7 +40,7 @@ def train(optimizer, n_iterations, *args):
         state = state[-1]
         print "Iteration %u:" % (i + 1), error
 
-def generate(length, temperature=0.0):
+def generate(length, temperature=1.0):
     results = charrnn.generate(np.eye(D)[0], length, temperature)
     seq = NumberSequence(results.argmax(axis=1))
     return seq.decode(text_encoding)

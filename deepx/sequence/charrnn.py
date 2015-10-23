@@ -6,7 +6,7 @@ import theano.tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 
 from theanify import theanify
-from deepx.nn import ParameterModel, LSTM, Softmax, load_lstm, load_softmax
+from deepx.nn import ParameterModel, LSTM, Softmax
 
 class CharacterRNN(ParameterModel):
 
@@ -39,8 +39,8 @@ class CharacterRNN(ParameterModel):
 
         self.n_hidden = state['n_hidden']
         self.n_layers = state['n_layers']
-        self.lstm = load_lstm(state['lstm'])
-        self.output = load_softmax(state['output'])
+        self.lstm.load(state['lstm'])
+        self.output.load(state['output'])
 
     @theanify(T.tensor3('X'), T.tensor3('state'), T.tensor3('y'))
     def cost(self, X, state, y):
