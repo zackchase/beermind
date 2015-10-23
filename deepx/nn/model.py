@@ -15,7 +15,7 @@ class ParameterModel(Theanifiable):
         self.parameters = {}
 
     def initialize_weights(self, shape):
-        return floatX((np.random.rand(*shape) - 0.5) / 1000.0)
+        return floatX(np.random.randn(*shape) * 0.01)
 
     def init_parameter(self, name, value):
         logging.debug("Creating parameter %s-%s" % (self.name, name))

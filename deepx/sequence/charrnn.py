@@ -1,3 +1,4 @@
+import cPickle as pickle
 import numpy as np
 import theano
 import theano.tensor as T
@@ -5,7 +6,7 @@ import theano.tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 
 from theanify import theanify
-from deepx.nn import ParameterModel, LSTM, Softmax
+from deepx.nn import ParameterModel, LSTM, Softmax, load_lstm, load_softmax
 
 class CharacterRNN(ParameterModel):
 
@@ -21,6 +22,25 @@ class CharacterRNN(ParameterModel):
                          n_layers=self.n_layers)
         self.output = Softmax('%s-softmax' % name, n_hidden, self.vocab_size)
         self.rng = RandomStreams(seed=1337)
+
+    def save_parameters(self, location):
+        state = {
+            'n_hidden': self.n_hidden,
+            'n_layers': self.n_layers,
+            'lstm': self.lstm.state(),
+            'output': self.output.state()
+        }
+        with open(location, 'wb') as fp:
+            pickle.dump(state, fp)
+
+    def load_parameters(self, location):
+        with open(location, 'rb') as fp:
+            state = pickle.load(fp)
+
+        self.n_hidden = state['n_hidden']
+        self.n_layers = state['n_layers']
+        self.lstm = load_lstm(state['lstm'])
+        self.output = load_softmax(state['output'])
 
     def cost(self, X, state, y):
         _, state, ypred = self.forward(X, state)

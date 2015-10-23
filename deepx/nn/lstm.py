@@ -1,4 +1,3 @@
-import logging
 import numpy as np
 import theano.tensor as T
 
@@ -120,19 +119,19 @@ def LSTMLayer(*args, **kwargs):
                 'parameters': state_params
             }
 
-        @classmethod
-        def load(cls, state):
-            layer = cls(state['name'], state['n_input'], state['n_output'],
-                        use_forget_gate=state['use_forget_gate'],
-                        use_input_peep=state['use_input_peep'],
-                        use_output_peep=state['use_output_peep'],
-                        use_forget_peep=state['use_forget_peep'],
-                        use_tanh_output=state['use_tanh_output'],
-                        )
-            for param, value in state['parameters'].items():
-                layer.set_parameter_value(param, value)
-            return layer
     return LSTMLayer(*args, **kwargs)
+
+def load_layer(state):
+    layer = LSTMLayer(state['name'], state['n_input'], state['n_output'],
+                use_forget_gate=state['use_forget_gate'],
+                use_input_peep=state['use_input_peep'],
+                use_output_peep=state['use_output_peep'],
+                use_forget_peep=state['use_forget_peep'],
+                use_tanh_output=state['use_tanh_output'],
+                )
+    for param, value in state['parameters'].items():
+        layer.set_parameter_value(param, value)
+    return layer
 
 def LSTM(*args, **kwargs):
     class LSTM(ParameterModel):
@@ -167,4 +166,22 @@ def LSTM(*args, **kwargs):
                 params += layer.get_parameters()
             return params
 
+        def state(self):
+            return {
+                'name': self.name,
+                'n_input': self.n_input,
+                'n_hidden': self.n_hidden,
+                'n_layers': self.n_layers,
+                'input_layer': self.input_layer.state(),
+                'layers': [layer.state() for layer in self.layers],
+            }
+
     return LSTM(*args, **kwargs)
+
+def load_lstm(state):
+    lstm = LSTM(state['name'], state['n_input'],
+                n_hidden=state['n_hidden'],
+                n_layers=state['n_layers'])
+    lstm.input_layer = load_layer(state['input_layer'])
+    lstm.layers = [load_layer(s) for s in state['layers']]
+    return lstm

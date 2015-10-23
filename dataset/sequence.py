@@ -57,3 +57,6 @@ class CharacterSequence(Sequence):
     @staticmethod
     def from_string(string):
         return CharacterSequence(list(string.lower()))
+
+    def __str__(self):
+        return ''.join(self.seq)

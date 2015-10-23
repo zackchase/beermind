@@ -26,17 +26,17 @@ def Softmax(*args):
             for param, value in self.parameters.items():
                 state_params[param] = value.get_value()
             return {
+                'name': self.name,
                 'n_input': self.n_input,
                 'n_output': self.n_output,
                 'parameters': state_params
             }
 
-
-        @staticmethod
-        def load(state):
-            assert len(state) ==  3, state
-            softmax = Softmax(state['name'], state['n_input'], state['n_output'])
-            for param, value in state['parameters'].items():
-                softmax.set_parameter_value(param, value)
-            return softmax
     return Softmax(*args)
+
+def load_softmax(state):
+    assert len(state) ==  4, state
+    softmax = Softmax(state['name'], state['n_input'], state['n_output'])
+    for param, value in state['parameters'].items():
+        softmax.set_parameter_value(param, value)
+    return softmax
