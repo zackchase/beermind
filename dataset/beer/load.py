@@ -23,7 +23,10 @@ def load_data(data_dir):
         for review in tqdm(load_json(data_dir)):
             beer_id = int(review['beer/beerId'])
             if beer_id not in beers:
-                beers[beer_id] = Beer.from_json(review)
+                try:
+                    beers[beer_id] = Beer.from_json(review)
+                except:
+                    continue
             beer = beers[beer_id]
 
             reviews.append(Review.from_json(review, beer))

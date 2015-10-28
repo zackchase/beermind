@@ -16,7 +16,7 @@ scipy==0.16.0
 simplegeneric==0.8.1
 six==1.10.0
 smart-open==1.3.0
-theanify==0.1.3
+theanify==0.1.9
 Theano==0.7.0
 tqdm==2.0.0
 traitlets==4.0.0

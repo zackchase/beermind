@@ -1,3 +1,4 @@
+import numpy as np
 from sequence import NumberSequence, WordSequence
 
 class Encoding(object):
@@ -6,7 +7,8 @@ class Encoding(object):
     STOP_TOKEN = '<EOS>'
 
     def __init__(self):
-        pass
+        self.include_start_token = False
+        self.include_stop_token = False
 
     in_sequence_type = None
     out_sequence_type = None
@@ -20,16 +22,14 @@ class Encoding(object):
     def decode(self, obj):
         raise NotImplementedError
 
-    def encode_sequence(self, sequence,
-                        include_start_token=False,
-                        include_stop_token=False):
+    def encode_sequence(self, sequence):
         seq = [self.encode(s) for s in sequence.iter()]
-        if include_start_token:
-            seq.insert(0, self.encode(self.START_TOKEN))
-        if include_stop_token:
-            seq.append(self.encode(self.STOP_TOKEN))
+        if self.include_start_token:
+            seq = [self.encode(self.START_TOKEN)] + seq
+        if self.include_stop_token:
+            seq = seq + [self.encode(self.STOP_TOKEN)]
         return self.out_sequence_type(
-           [self.encode(self.START_TOKEN)] + [self.encode(s) for s in sequence.iter()]
+            seq
         )
 
     def decode_sequence(self, sequence):
@@ -37,11 +37,22 @@ class Encoding(object):
             [self.decode(s) for s in sequence.iter()]
         )
 
+    def __len__(self):
+        return self.index
+
+class IdentityEncoding(Encoding):
+
+    def __init__(self, size):
+        self.index = size
+
+    def convert_representation(self, rep):
+        return rep
+
 class OneHotEncoding(Encoding):
 
     out_sequence_type = NumberSequence
 
-    def __init__(self, include_start_token=True, include_stop_token=False):
+    def __init__(self, include_start_token=True, include_stop_token=True):
         super(Encoding, self).__init__()
         self.include_start_token = include_start_token
         self.include_stop_token = include_stop_token
@@ -49,7 +60,7 @@ class OneHotEncoding(Encoding):
         self.backward_mapping = []
         self.index = 0
         self.in_sequence_type = None
-        self.include_start_token = include_start_token
+
         if self.include_start_token:
             self.forward_mapping[self.START_TOKEN] = self.index
             self.backward_mapping.append(self.START_TOKEN)
@@ -75,3 +86,8 @@ class OneHotEncoding(Encoding):
 
     def decode(self, index):
         return self.backward_mapping[index]
+
+    def convert_representation(self, rep):
+        vec = np.zeros(self.index)
+        vec[rep[0]] = 1
+        return vec

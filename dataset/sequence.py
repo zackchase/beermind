@@ -18,6 +18,9 @@ class Sequence(object):
     def decode(self, encoding):
         return encoding.decode_sequence(self)
 
+    def replicate(self, n_times):
+        raise NotImplementedError
+
     def iter(self):
         return iter(self.seq)
 
@@ -33,9 +36,18 @@ class NumberSequence(Sequence):
 
     def __init__(self, seq):
         self.seq = np.array(seq)
+        if self.seq.ndim == 1:
+            self.seq = self.seq[:, np.newaxis]
 
-    def concatenate(self, num_seq):
-        return NumberSequence(np.concatenate([self.seq, num_seq.seq]))
+    def replicate(self, n_times):
+        return NumberSequence(np.tile(self.seq, (n_times, 1)))
+
+    def stack(self, num_seq):
+        assert len(num_seq) == len(self), "Sequences must be same length"
+        return NumberSequence(np.hstack([self.seq, num_seq.seq]))
+
+    def __len__(self):
+        return self.seq.shape[0]
 
 class WordSequence(Sequence):
 
@@ -43,8 +55,10 @@ class WordSequence(Sequence):
         self.seq = seq
 
     @staticmethod
-    def from_string(string):
-        return WordSequence([w.lower() for w in word_tokenize(string)])
+    def from_string(string, lower=False):
+        if lower:
+            return WordSequence([w.lower() for w in word_tokenize(string)])
+        return WordSequence([w for w in word_tokenize(string)])
 
 class CharacterSequence(Sequence):
 
@@ -55,8 +69,10 @@ class CharacterSequence(Sequence):
         return CharacterSequence(self.seq + char_seq.seq)
 
     @staticmethod
-    def from_string(string):
-        return CharacterSequence(list(string.lower()))
+    def from_string(string, lower=False):
+        if lower:
+            return CharacterSequence(list(string.lower()))
+        return CharacterSequence(list(string))
 
     def __str__(self):
         return ''.join(self.seq)

@@ -1,3 +1,4 @@
+import theano
 import numpy as np
 import theano.tensor as T
 
@@ -5,14 +6,18 @@ from theanify import theanify
 
 from model import ParameterModel
 
+from theano.tensor.shared_randomstreams import RandomStreams
+
 def LSTMLayer(*args, **kwargs):
     class LSTMLayer(ParameterModel):
 
         def __init__(self, name, n_input, n_output,
                     use_forget_gate=True,
                     use_input_peep=False, use_output_peep=False, use_forget_peep=False,
-                    use_tanh_output=True, seed=None):
+                    use_tanh_output=True, seed=None, rng=None):
             super(LSTMLayer, self).__init__(name)
+
+            self.rng = rng or RandomStreams(seed)
 
             self.n_input = n_input
             self.n_output = n_output
@@ -48,8 +53,9 @@ def LSTMLayer(*args, **kwargs):
             if self.use_forget_peep:
                 self.init_parameter('P_f', self.initialize_weights((self.n_output, self.n_output)))
 
-        @theanify(T.matrix('X'), T.matrix('previous_hidden'), T.matrix('previous_state'))
-        def step(self, X, previous_hidden, previous_state):
+        @theanify(T.matrix('X'), T.matrix('previous_hidden'), T.matrix('previous_state'),
+                  T.fscalar('dropout_prob'))
+        def step(self, X, previous_hidden, previous_state, dropout_prob):
             """
             Parameters:
                 X               - B x D (B is batch size, D is dimension)
@@ -101,6 +107,13 @@ def LSTMLayer(*args, **kwargs):
                 output = output_gate * T.tanh(state)
             else:
                 output = output_gate * state
+
+            # dropout = self.rng.binomial(output.shape, p=1 - dropout_prob, dtype=theano.config.floatX)
+            # output *= dropout
+            # output /= (1 - dropout_prob)
+
+            # output = T.addbroadcast(output, 0)
+
             return output, state
 
         def state(self):
@@ -135,7 +148,8 @@ def LSTMLayer(*args, **kwargs):
 
 def LSTM(*args, **kwargs):
     class LSTM(ParameterModel):
-        def __init__(self, name, n_input, n_hidden=10, n_layers=2):
+        def __init__(self, name, n_input, n_hidden=10, n_layers=2, dropout_probability=0.0,
+                     rng=None):
             super(LSTM, self).__init__(name)
 
             self.n_input = n_input
@@ -143,19 +157,25 @@ def LSTM(*args, **kwargs):
             self.n_layers = n_layers
             assert self.n_layers >= 1
             self.layers = []
+            self.dropout_probability = dropout_probability
             self.input_layer = LSTMLayer('%s-input' % name,
                                         self.n_input,
-                                        self.n_hidden)
+                                        self.n_hidden,
+                                        rng=rng)
             for i in xrange(self.n_layers - 1):
                 self.layers.append(LSTMLayer('%s-layer-%u' % (name, i),
                                             self.n_hidden,
-                                            self.n_hidden))
+                                            self.n_hidden,
+                                            rng=rng))
+
 
         def forward(self, X, previous_state, previous_hidden):
-            output, state = self.input_layer.step(X, previous_state[:, 0, :], previous_hidden[:, 0, :])
+            output, state = self.input_layer.step(X, previous_state[:, 0, :], previous_hidden[:, 0, :],
+                                                  self.dropout_probability)
             hiddens, states = [output], [state]
             for i, layer in enumerate(self.layers):
-                output, state = layer.step(output, previous_state[:, i + 1, :], previous_hidden[:, i + 1, :])
+                output, state = layer.step(output, previous_state[:, i + 1, :], previous_hidden[:, i + 1, :],
+                                           self.dropout_probability)
                 hiddens.append(output)
                 states.append(state)
             return T.swapaxes(T.stack(*hiddens), 0, 1), T.swapaxes(T.stack(*states), 0, 1)

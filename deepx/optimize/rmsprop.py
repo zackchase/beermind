@@ -10,10 +10,12 @@ class RMSProp(Optimizer):
         self.average_rms = [theano.shared(p.get_value() * 0) for p in parameter_model.get_parameters()]
         self.parameter_update = [theano.shared(p.get_value() * 0) for p in parameter_model.get_parameters()]
 
-        super(RMSProp, self).__init__(parameter_model)
+        super(RMSProp, self).__init__(parameter_model, [
+            T.scalar('learning_rate')
+        ])
 
 
-    def updates(self, *args):
+    def updates(self, learning_rate, *args):
         grads = self.grads
         next_average_gradient = [0.95 * avg + 0.05 * g for g, avg in zip(grads, self.average_gradient)]
         next_rms = [0.95 * rms + 0.05 * (g ** 2) for g, rms in zip(grads, self.average_rms)]
@@ -30,7 +32,7 @@ class RMSProp(Optimizer):
         next_parameter_update = [(param, param_update) for param, param_update in zip(self.parameter_update,
                                                                                     next_parameter)]
 
-        updates = [(p, p + param_update) for p, param_update in zip(self.get_parameters(), next_parameter)]
+        updates = [(p, p + learning_rate * param_update) for p, param_update in zip(self.get_parameters(), next_parameter)]
 
         return updates + average_gradient_update + rms_update + next_parameter_update
 
