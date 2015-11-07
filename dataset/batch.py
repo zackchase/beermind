@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import sparse
 
 class Batcher(object):
     pass
@@ -63,6 +64,6 @@ class WindowedBatcher(object):
 
         X = np.swapaxes(X, 0, 1)
         y = np.swapaxes(y, 0, 1)
-        self.batch_cache[self.batch_index] = X, y
+        # self.batch_cache[self.batch_index] = X, y
         self.batch_index += 1
         return X, y

@@ -15,7 +15,7 @@ class Momentum(Optimizer):
     def updates(self, rho, eta, *args):
         updates = []
         for p, c, g in zip(self.get_parameters(), self.caches, self.grads):
-            delta = rho * g + (1-rho) * c
+            delta = rho * g + (1 - rho) * c
             updates.append((c, delta))
             updates.append((p, p - eta * delta))
         return updates

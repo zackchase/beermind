@@ -112,7 +112,8 @@ class CharacterRNN(ParameterModel):
         L = self.lstm.n_layers
 
         def step(input, previous_hidden, previous_state, temperature, concat):
-            lstm_hidden, state = self.lstm.forward(T.concatenate([input, concat], axis=1), previous_hidden, previous_state)
+            lstm_hidden, state = self.lstm.forward(T.concatenate([input, concat], axis=1),
+                                                   previous_hidden, previous_state)
             final_output = self.output.forward(lstm_hidden[:, -1, :], temperature)
             sample = self.rng.multinomial(n=1, size=(1,), pvals=final_output, dtype=theano.config.floatX)
             return sample, lstm_hidden, state
@@ -129,6 +130,32 @@ class CharacterRNN(ParameterModel):
                               non_sequences=[temperature, concat],
                               n_steps=length)
         return softmax_output[:, 0, :], updates
+
+    @theanify(T.tensor3('X'), returns_updates=True)
+    def log_probability(self, X):
+        S, N, D = X.shape
+        H = self.lstm.n_hidden
+        L = self.lstm.n_layers
+        O = self.n_output
+
+        def step(input, log_prob, previous_hidden, previous_state):
+            lstm_hidden, state = self.lstm.forward(input, previous_hidden, previous_state)
+            final_output = self.output.forward(lstm_hidden[:, -1, :], 1.0)
+            return final_output, lstm_hidden, state
+
+        hidden = T.unbroadcast(T.alloc(np.array(0).astype(theano.config.floatX), N, L, H), 1)
+        start_log = T.alloc(np.array(0).astype(theano.config.floatX), N, O)
+        state = T.unbroadcast(T.alloc(np.array(0).astype(theano.config.floatX), N, L, H))
+
+        (log_prob, _, _), updates = theano.scan(step,
+                              sequences=[X],
+                              outputs_info=[
+                                            start_log,
+                                            hidden,
+                                            state,
+                                           ],
+                              n_steps=S)
+        return log_prob, updates
 
 
     def get_parameters(self):

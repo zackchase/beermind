@@ -107,13 +107,6 @@ def LSTMLayer(*args, **kwargs):
                 output = output_gate * T.tanh(state)
             else:
                 output = output_gate * state
-
-            # dropout = self.rng.binomial(output.shape, p=1 - dropout_prob, dtype=theano.config.floatX)
-            # output *= dropout
-            # output /= (1 - dropout_prob)
-
-            # output = T.addbroadcast(output, 0)
-
             return output, state
 
         def state(self):
@@ -167,7 +160,6 @@ def LSTM(*args, **kwargs):
                                             self.n_hidden,
                                             self.n_hidden,
                                             rng=rng))
-
 
         def forward(self, X, previous_state, previous_hidden):
             output, state = self.input_layer.step(X, previous_state[:, 0, :], previous_hidden[:, 0, :],
