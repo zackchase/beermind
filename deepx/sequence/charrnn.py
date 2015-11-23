@@ -131,6 +131,35 @@ class CharacterRNN(ParameterModel):
                               n_steps=length)
         return softmax_output[:, 0, :], updates
 
+    @theanify(T.fvector('start_token'), T.fvector('concat'), T.iscalar('length'), T.iscalar('num_examples'), T.fscalar('temperature'), returns_updates=True)
+    def generate_examples(self, start_token, concat, length, num_examples, temperature):
+        start_token = T.tile(start_token[:, np.newaxis].T, (num_examples, 1))
+        concat = T.tile(concat[:, np.newaxis].T, (num_examples, 1))
+        N = num_examples
+        H = self.lstm.n_hidden
+        L = self.lstm.n_layers
+
+        def step(input, previous_hidden, previous_state, temperature, concat):
+            lstm_hidden, state = self.lstm.forward(T.concatenate([input, concat], axis=1),
+                                                   previous_hidden, previous_state)
+            final_output = self.output.forward(lstm_hidden[:, -1, :], temperature)
+            sample = self.rng.multinomial(n=1, size=(num_examples,), pvals=final_output, dtype=theano.config.floatX)
+            return sample, lstm_hidden, state
+
+        hidden = T.unbroadcast(T.alloc(np.array(0).astype(theano.config.floatX), N, L, H), 1)
+        state = T.unbroadcast(T.alloc(np.array(0).astype(theano.config.floatX), N, L, H), 1)
+
+        (softmax_output, _, _), updates = theano.scan(step,
+                              outputs_info=[
+                                            start_token,
+                                            hidden,
+                                            state,
+                                           ],
+                              non_sequences=[temperature, concat],
+                              n_steps=length)
+        return softmax_output[:, :, :], updates
+
+
     @theanify(T.tensor3('X'), returns_updates=True)
     def log_probability(self, X):
         S, N, D = X.shape

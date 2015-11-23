@@ -70,6 +70,7 @@ class CharacterSequence(Sequence):
 
     @staticmethod
     def from_string(string, lower=False):
+        string = string.replace("\x7f", "")
         if lower:
             return CharacterSequence(list(string.lower()))
         return CharacterSequence(list(string))

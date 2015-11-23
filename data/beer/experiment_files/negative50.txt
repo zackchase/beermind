@@ -48,3 +48,6 @@ Smells like metal shavings and a bit of hay.
 Taste is missing in action, watery, bland.
 I certainly will not buy this ever again. 
 I really dislike this beer.
+This beer is not good.
+This beer is not great.
+This beer is awful.

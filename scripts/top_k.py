@@ -40,9 +40,22 @@ import random
 
 final_reviews = []
 
+
 for beer_type, reviews in core_reviews.iteritems():
+    random.seed(1337)
     random.shuffle(reviews)
     reviews = reviews[:30000]
     final_reviews.extend(reviews)
+
+random.seed(1337)
+random.shuffle(final_reviews)
+test_length = int(0.1 * len(final_reviews))
+
+train, test = final_reviews[:-test_length], final_reviews[-test_length:]
+
 with open('data/beer/beer_top.pkl', 'wb') as fp:
     pickle.dump((final_reviews, beers), fp)
+with open('data/beer/beer_top-test.pkl', 'wb') as fp:
+    pickle.dump((test, beers), fp)
+with open('data/beer/beer_top-train.pkl', 'wb') as fp:
+    pickle.dump((train, beers), fp)
